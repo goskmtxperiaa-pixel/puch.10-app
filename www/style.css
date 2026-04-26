@@ -1,70 +1,79 @@
-/* 【www/style.css】 */
+/* 【復元：2/3】 www/style.css (4月24日仕様) */
 :root {
-    --primary: #00e5ff;
-    --bg: #121212;
-    --cell-bg: #1a1a1a;
-    --border: #333;
-    --header-bg: #222;
-    /* セルのサイズ（後でJSでも調整しますが初期値を設定） */
-    --col-width: 80px;
-    --row-height: 40px;
-    --header-size: 36px;
+  --primary: #00e5ff;
+  --bg: #121212;
+  --header-bg: #1e1e1e;
+  --cell-border: #262626;
+  --highlight-bg: rgba(0, 229, 255, 0.15);
+  --header-size: 36px;
+  --col-width: 80px;
+  --row-height: 40px;
+  /* キーボード用変数 */
+  --kb-row-height: 44px;
+  --kb-font-size: 13px;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-body { margin: 0; font-family: sans-serif; background: var(--bg); color: #fff; height: 100vh; overflow: hidden; }
+body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: #fff; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
 #app { display: flex; flex-direction: column; height: 100%; }
 
-/* ヘッダー周り */
-header { background: var(--header-bg); border-bottom: 2px solid var(--border); box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-.top-bar-main { display: flex; justify-content: space-between; align-items: center; padding: 10px; }
-h1 { font-size: 16px; margin: 0; color: var(--primary); }
+header { background: var(--header-bg); border-bottom: 2px solid #333; z-index: 100; }
+.top-bar-main { display: flex; align-items: center; justify-content: space-between; padding: 10px; }
+h1 { font-size: 15px; margin: 0; color: var(--primary); font-weight: bold; }
 .actions { display: flex; gap: 4px; }
-.btn { background: #333; color: #fff; border: 1px solid #444; padding: 6px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+.btn { background: #333; color: #fff; border: 1px solid #444; padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; }
 .btn:active { background: var(--primary); color: #000; }
 
-/* 数式入力欄 */
-#info-bar { padding: 5px; background: #111; }
-#formula-bar { width: 100%; background: #000; border: 1px solid #444; color: #fff; font-size: 16px; padding: 8px; border-radius: 4px; outline: none; }
+.info-bar { background: #000; border-top: 1px solid #333; }
+.info-row { padding: 4px 10px; font-size: 11px; min-height: 22px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.formula-row { color: #fbc02d; font-weight: bold; border-bottom: 1px solid #111; }
+.button-hint-row { color: #888; }
 
-/* 表の表示エリア */
 #grid-container { flex: 1; overflow: auto; position: relative; }
 #grid {
-    display: grid;
-    grid-template-columns: var(--header-size) repeat(50, var(--col-width));
-    grid-auto-rows: var(--row-height);
-    width: max-content;
+  display: grid;
+  grid-template-columns: var(--header-size) repeat(50, var(--col-width));
+  grid-auto-rows: var(--row-height);
+  width: max-content;
 }
 
-/* セル単体のデザイン */
-.cell {
-    background: var(--cell-bg);
-    border-right: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    overflow: hidden;
-    white-space: nowrap;
-}
-
-/* 行番号・列番号の固定見出し */
-.cell.header-row, .cell.header-col { background: #2a2a2a; color: #aaa; font-weight: bold; position: sticky; z-index: 5; }
+.cell { background: #1a1a1a; border-right: 1px solid var(--cell-border); border-bottom: 1px solid var(--cell-border); display: flex; align-items: center; justify-content: center; font-size: 14px; position: relative; }
+.cell.header-row, .cell.header-col { background: #262626; color: #aaa; position: sticky; z-index: 10; font-weight: bold; }
 .cell.header-row { top: 0; }
 .cell.header-col { left: 0; }
-.cell.header-corner { top: 0; left: 0; z-index: 10; background: #333; }
+.cell.header-corner { top: 0; left: 0; z-index: 20; background: #333; }
+.cell.selected { border: 2px solid var(--primary); background: var(--highlight-bg); z-index: 5; }
 
-/* 選択中のセル */
-.cell.selected { border: 2px solid var(--primary); background: rgba(0, 229, 255, 0.1); z-index: 4; }
+/* フローティングボタン */
+.floating-btn { position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: #000; padding: 12px 20px; border-radius: 30px; font-weight: bold; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 500; }
+.floating-btn.left-hand { right: auto; left: 20px; }
 
-/* 浮いているボタン */
-.floating-btn { position: fixed; bottom: 20px; right: 20px; background: var(--primary); border: none; padding: 12px 18px; border-radius: 30px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 100; }
-
-/* キーボード */
-.keyboard { position: fixed; bottom: 0; width: 100%; background: #1e1e1e; border-top: 2px solid var(--primary); z-index: 200; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+/* キーボード：ここが4月24日の重要ポイント */
+.keyboard { position: fixed; bottom: 0; left: 0; width: 100%; background: #1e1e1e; border-top: 1px solid var(--primary); z-index: 2000; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 .keyboard.hidden { transform: translateY(100%); }
-#kb-resize-handle { height: 10px; background: #333; cursor: ns-resize; touch-action: none; }
-.kb-keys { display: flex; gap: 10px; padding: 20px; justify-content: center; }
-.kb-key { background: #333; color: #fff; border: 1px solid #444; padding: 15px 25px; border-radius: 8px; font-weight: bold; }
+
+.kb-formula-bar { padding: 6px; background: #000; border-bottom: 1px solid #333; }
+.kb-formula-input { width: 100%; background: #111; color: #fff; border: 1px solid #444; padding: 8px; font-size: 16px; border-radius: 4px; outline: none; }
+
+.kb-grid-main { display: grid; grid-template-columns: repeat(3, 1fr) 50px repeat(6, 1fr); gap: 4px; padding: 6px; }
+.kb-grid-main.left-hand { direction: rtl; }
+.kb-grid-main.left-hand .kb-key { direction: ltr; }
+
+.kb-numpad { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(4, var(--kb-row-height)); gap: 4px; grid-column: span 3; }
+.kb-v-panel { display: flex; flex-direction: column; gap: 4px; }
+.kb-functions { grid-column: span 6; display: grid; }
+.kb-contents-grid { display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(3, var(--kb-row-height)); gap: 4px; }
+.kb-contents-grid.hidden { display: none; }
+
+.kb-key { background: #2a2a2a; border: 1px solid #333; color: #eee; font-weight: bold; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: var(--kb-font-size); user-select: none; }
+.kb-key:active { background: #444; }
+.kb-key.num { background: #333; }
+.kb-key.v-suggest { color: var(--primary); background: rgba(0, 229, 255, 0.05); }
+.kb-key.v-suggest.active { background: rgba(0, 229, 255, 0.2); border: 1px solid var(--primary); }
+.kb-key.delete { background: #5d2a2a; color: #ff8a80; }
+.kb-key.enter { background: #1b5e20; color: #b9f6ca; }
+.kb-key.fn-btn.active { background: var(--primary); color: #000; }
+
+#kb-resize-handle { height: 10px; background: #333; cursor: ns-resize; touch-action: none; display: flex; justify-content: center; align-items: center; }
+#kb-resize-handle::after { content: ""; width: 40px; height: 3px; background: #555; border-radius: 2px; }
