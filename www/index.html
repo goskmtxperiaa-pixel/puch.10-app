@@ -1,55 +1,76 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ぷち表計算</title>
-    <!-- デザイン(CSS) -->
-    <link rel="stylesheet" href="style.css">
-    <!-- Excel操作ライブラリ(SheetJS) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>ぷちっと表計さん</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
-    <div id="app">
-        <!-- 上部メニューバー -->
-        <header id="top-bar">
-            <div class="top-bar-main">
-                <h1>ぷち表計算</h1>
-                <div class="actions">
-                    <button id="btn-open" class="btn">開く</button>
-                    <button id="btn-copy" class="btn">コピー</button>
-                    <button id="btn-paste" class="btn">貼付</button>
-                    <button id="btn-export-csv" class="btn">CSV</button>
-                    <button id="btn-export-excel" class="btn">Excel</button>
-                </div>
-                <!-- 隠しファイル入力 -->
-                <input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="display:none;">
-            </div>
-            <!-- 数式・ヒントバー -->
-            <div id="info-bar">
-                <input type="text" id="formula-bar" placeholder="数式や値を入力...">
-            </div>
-        </header>
-
-        <!-- メインの表エリア -->
-        <div id="grid-container">
-            <div id="grid"></div>
+  <div id="app">
+    <header>
+      <div class="top-bar-main">
+        <h1>ぷちっと表計さん</h1>
+        <div class="actions">
+          <button id="btn-open" class="btn">Open</button>
+          <button id="btn-copy" class="btn">Copy</button>
+          <button id="btn-paste" class="btn">Paste</button>
+          <button id="btn-export-csv" class="btn">CSV</button>
+          <button id="btn-export-excel" class="btn">Excel</button>
         </div>
+        <input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="display:none;">
+      </div>
+      <div class="info-bar">
+        <div id="formula-hint" class="info-row formula-row"></div>
+        <div id="button-tooltip" class="info-row button-hint-row">説明</div>
+      </div>
+    </header>
 
-        <!-- キーボード切り替えボタン -->
-        <button id="btn-toggle-input" class="floating-btn">キーボード</button>
-
-        <!-- 専用キーボード -->
-        <div id="custom-keyboard" class="keyboard hidden">
-            <div id="kb-resize-handle"></div>
-            <div class="kb-keys">
-                <!-- ここにJSでキーが配置される予定 -->
-                <button class="kb-key" onclick="commitInput()">確定</button>
-                <button class="kb-key" onclick="closeKeyboard()">閉じる</button>
-            </div>
-        </div>
+    <div id="grid-container">
+      <div id="grid"></div>
     </div>
-    <!-- メインプログラム(JS) -->
-    <script src="script.js"></script>
+
+    <button id="btn-toggle-input" class="floating-btn">数値入力</button>
+
+    <div id="custom-keyboard" class="keyboard hidden">
+      <div id="kb-resize-handle" class="resize-handle-v"></div>
+      <div class="kb-formula-bar">
+        <input type="text" id="formula-bar" class="kb-formula-input" placeholder="数式入力..." readonly>
+      </div>
+      <div id="kb-normal">
+        <div class="kb-grid-main">
+          <!-- テンキーエリア -->
+          <div class="kb-numpad">
+            <div class="kb-key num" data-key="7">7</div><div class="kb-key num" data-key="8">8</div><div class="kb-key num" data-key="9">9</div>
+            <div class="kb-key num" data-key="4">4</div><div class="kb-key num" data-key="5">5</div><div class="kb-key num" data-key="6">6</div>
+            <div class="kb-key num" data-key="1">1</div><div class="kb-key num" data-key="2">2</div><div class="kb-key num" data-key="3">3</div>
+            <div class="kb-key num" data-key="0" style="grid-column: span 2;">0</div><div class="kb-key num" data-key=".">.</div>
+          </div>
+          <!-- 中央操作エリア -->
+          <div class="kb-v-panel">
+            <div id="v-key-1" class="kb-key v-suggest"></div>
+            <div id="v-key-2" class="kb-key v-suggest"></div>
+            <div id="v-key-3" class="kb-key v-suggest"></div>
+            <div class="kb-key delete" data-key="backspace">⌫</div>
+          </div>
+          <!-- 関数エリア -->
+          <div class="kb-functions">
+            <div id="kb-primary-contents" class="kb-contents-grid">
+               <div class="kb-key" data-key="sum">SUM</div><div class="kb-key" data-key="avr">AVG</div><div class="kb-key" data-key="(">(</div><div class="kb-key" data-key=")">)</div><div class="kb-key" data-key="/">÷</div><div class="kb-key delete" data-key="delete-all">AC</div>
+               <div class="kb-key" data-key="arrow-up">↑</div><div class="kb-key" data-key="+">+</div><div class="kb-key" data-key="-">-</div><div class="kb-key" data-key="*">×</div><div class="kb-key fn-btn" data-key="toggle-fn">Fn</div><div class="kb-key" data-key="pi">π</div>
+               <div class="kb-key" data-key="arrow-left">←</div><div class="kb-key" data-key="arrow-down">↓</div><div class="kb-key" data-key="arrow-right">→</div><div class="kb-key" data-key=":">:</div><div class="kb-key" data-key="=">=</div><div class="kb-key enter" data-key="enter">確定</div>
+            </div>
+            <div id="kb-secondary-contents" class="kb-contents-grid hidden">
+               <div class="kb-key" data-key="max">MAX</div><div class="kb-key" data-key="min">MIN</div><div class="kb-key" data-key="count">CNT</div><div class="kb-key" data-key="sqrt">√</div><div class="kb-key" data-key="^">^</div><div class="kb-key" data-key="switch-hand">利き手</div>
+               <div class="kb-key" data-key="sin">sin</div><div class="kb-key" data-key="cos">cos</div><div class="kb-key" data-key="tan">tan</div><div class="kb-key" data-key="log">log</div><div class="kb-key fn-btn active" data-key="toggle-fn">Fn</div><div class="kb-key" data-key="minimize">隠す</div>
+               <div class="kb-key" data-key="abs">abs</div><div class="kb-key" data-key="exp">exp</div><div class="kb-key" data-key="round">RND</div><div class="kb-key" data-key=",">,</div><div class="kb-key" data-key="undo">↺</div><div class="kb-key enter" data-key="enter">確定</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="script.js"></script>
 </body>
 </html>
