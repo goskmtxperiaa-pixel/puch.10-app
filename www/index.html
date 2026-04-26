@@ -1,52 +1,55 @@
-<!-- 【www/index.html】 -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ぷち表計算</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ぷち表計算</title>
+    <!-- デザイン(CSS) -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Excel操作ライブラリ(SheetJS) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
-  <div id="app">
-    <header id="top-bar">
-      <div class="top-bar-main">
-        <h1>ぷち表計算</h1>
-        <div class="actions">
-          <button id="btn-open" class="btn">Open</button>
-          <button id="btn-copy" class="btn">Copy</button>
-          <button id="btn-paste" class="btn">Paste</button>
-          <button id="btn-export-csv" class="btn">CSV</button>
-          <button id="btn-export-excel" class="btn">Excel</button>
+    <div id="app">
+        <!-- 上部メニューバー -->
+        <header id="top-bar">
+            <div class="top-bar-main">
+                <h1>ぷち表計算</h1>
+                <div class="actions">
+                    <button id="btn-open" class="btn">開く</button>
+                    <button id="btn-copy" class="btn">コピー</button>
+                    <button id="btn-paste" class="btn">貼付</button>
+                    <button id="btn-export-csv" class="btn">CSV</button>
+                    <button id="btn-export-excel" class="btn">Excel</button>
+                </div>
+                <!-- 隠しファイル入力 -->
+                <input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="display:none;">
+            </div>
+            <!-- 数式・ヒントバー -->
+            <div id="info-bar">
+                <input type="text" id="formula-bar" placeholder="数式や値を入力...">
+            </div>
+        </header>
+
+        <!-- メインの表エリア -->
+        <div id="grid-container">
+            <div id="grid"></div>
         </div>
-        <input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="display:none;">
-      </div>
-      <div id="info-bar" class="info-bar">
-        <div id="formula-hint" class="info-row">関数のヒントがここに表示されます</div>
-      </div>
-    </header>
 
-    <div id="grid-container">
-      <div id="grid"></div>
+        <!-- キーボード切り替えボタン -->
+        <button id="btn-toggle-input" class="floating-btn">キーボード</button>
+
+        <!-- 専用キーボード -->
+        <div id="custom-keyboard" class="keyboard hidden">
+            <div id="kb-resize-handle"></div>
+            <div class="kb-keys">
+                <!-- ここにJSでキーが配置される予定 -->
+                <button class="kb-key" onclick="commitInput()">確定</button>
+                <button class="kb-key" onclick="closeKeyboard()">閉じる</button>
+            </div>
+        </div>
     </div>
-
-    <button id="btn-toggle-input" class="floating-btn">数値入力</button>
-
-    <div id="custom-keyboard" class="keyboard hidden">
-      <div id="kb-resize-handle" class="resize-handle-v"></div>
-      <div class="kb-formula-bar">
-        <input type="text" id="formula-bar" class="kb-formula-input" placeholder="数式を入力...">
-      </div>
-      <div id="kb-normal" class="kb-grid-main">
-          <!-- 簡易的なテンキーのみ表示 -->
-          <div style="display:grid; grid-template-columns: repeat(3, 1fr); width:100%; gap:5px; padding:10px;">
-              <button class="kb-key num" onclick="commitInput()">確定</button>
-              <button class="kb-key num" onclick="state.keyboardMode='hidden'; document.getElementById('custom-keyboard').classList.add('hidden')">閉じる</button>
-          </div>
-      </div>
-    </div>
-  </div>
-  <script src="script.js"></script>
+    <!-- メインプログラム(JS) -->
+    <script src="script.js"></script>
 </body>
 </html>
