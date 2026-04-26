@@ -1,3 +1,5 @@
+// 【script.js の全内容】
+// 下のコードをすべてコピーして GitHub の www/script.js に貼り付けてください
 const NUM_COLS = 50;
 const NUM_ROWS = 200;
 
@@ -11,7 +13,8 @@ let state = {
   referenceMode: false, 
   keyboardMode: 'hidden', 
   handedness: 'right', 
-  keyboardMinimized: false
+  keyboardMinimized: false,
+  clipboard: null
 };
 
 const undoStack = [];
@@ -48,8 +51,14 @@ const vKeys = [
     document.getElementById('v-key-2'),
     document.getElementById('v-key-3')
 ];
+const btnOpen = document.getElementById('btn-open');
+const btnCopy = document.getElementById('btn-copy');
+const btnPaste = document.getElementById('btn-paste');
+const fileInput = document.getElementById('file-input');
+const btnExportCsv = document.getElementById('btn-export-csv');
+const btnExportExcel = document.getElementById('btn-export-excel');
 
-// --- Keyboard Height Resize Logic ---
+// --- Keyboard Height Logic ---
 let isResizing = false;
 kbResizeHandle.addEventListener('pointerdown', (e) => {
     isResizing = true;
@@ -59,9 +68,10 @@ kbResizeHandle.addEventListener('pointerdown', (e) => {
 
 window.addEventListener('pointermove', (e) => {
     if (!isResizing) return;
-    const newHeight = Math.max(18, Math.min(80, (window.innerHeight - e.clientY - 60) / 4));
+    const availableSpace = window.innerHeight - e.clientY - 40; 
+    const newHeight = Math.max(18, Math.min(100, availableSpace / 4));
     document.documentElement.style.setProperty('--kb-row-height', `${newHeight}px`);
-    const newFontSize = Math.max(10, Math.min(18, 10 + (newHeight - 18) * 0.3));
+    const newFontSize = Math.max(9, Math.min(18, 9 + (newHeight - 18) * 0.3));
     document.documentElement.style.setProperty('--kb-font-size', `${newFontSize}px`);
 });
 
@@ -73,13 +83,9 @@ window.addEventListener('pointerup', () => {
     }
 });
 
-// Load saved height
 const savedHeight = localStorage.getItem('kb-row-height');
 if (savedHeight) {
     document.documentElement.style.setProperty('--kb-row-height', savedHeight);
-    const heightVal = parseFloat(savedHeight);
-    const newFontSize = Math.max(10, Math.min(18, 10 + (heightVal - 18) * 0.3));
-    document.documentElement.style.setProperty('--kb-font-size', `${newFontSize}px`);
 }
 
 // Vibrate & Sound
@@ -173,7 +179,6 @@ function renderCells() {
       else el.textContent = cellData.display;
   });
 
-  // ヒント表示
   let activeHint = null;
   if (state.isEditing && state.inputBuffer.startsWith('=')) {
       const match = state.inputBuffer.match(/(\b[A-Z]+|√)\([^)]*$/);
@@ -402,6 +407,7 @@ function applyHandedness() {
     toggleInputBtn.classList.toggle('left-hand', isL);
     document.querySelector('.top-bar-main').classList.toggle('left-hand', isL);
 }
+
 function moveSelection(a) {
     if (!state.focusCell) return;
     const el = document.getElementById(`cell-${state.focusCell}`);
@@ -416,6 +422,73 @@ function moveSelection(a) {
     renderCells();
     document.getElementById(`cell-${nid}`).scrollIntoView({ block: 'nearest', inline: 'nearest' });
 }
+
+// --- File & Copy/Paste Functions ---
+btnOpen.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+        const data = evt.target.result;
+        const workbook = XLSX.read(data, { type: 'binary' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        
+        state.cells = {};
+        json.forEach((row, ri) => {
+            row.forEach((val, ci) => {
+                if (val !== undefined && val !== null) {
+                    const id = getCellId(ci, ri);
+                    state.cells[id] = { input: val.toString(), display: val.toString() };
+                }
+            });
+        });
+        recomputeAllFormulas();
+        renderCells();
+    };
+    reader.readAsBinaryString(file);
+});
+
+function exportFile(format) {
+    const data = [];
+    for (let r = 0; r < NUM_ROWS; r++) {
+        const row = [];
+        for (let c = 0; c < NUM_COLS; c++) {
+            const id = getCellId(c, r);
+            row.push(state.cells[id] ? state.cells[id].display : '');
+        }
+        data.push(row);
+    }
+    const worksheet = XLSX.utils.aoa_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+    if (format === 'xlsx') {
+        XLSX.writeFile(workbook, "puchitto_export.xlsx");
+    } else {
+        XLSX.writeFile(workbook, "puchitto_export.csv", { bookType: 'csv' });
+    }
+}
+btnExportExcel.addEventListener('click', () => exportFile('xlsx'));
+btnExportCsv.addEventListener('click', () => exportFile('csv'));
+
+btnCopy.addEventListener('click', () => {
+    if (state.focusCell) {
+        state.clipboard = JSON.parse(JSON.stringify(state.cells[state.focusCell] || { input: '', display: '' }));
+        feedback();
+    }
+});
+btnPaste.addEventListener('click', () => {
+    if (state.focusCell && state.clipboard) {
+        saveHistory();
+        state.cells[state.focusCell] = JSON.parse(JSON.stringify(state.clipboard));
+        recomputeAllFormulas();
+        renderCells();
+        feedback();
+    }
+});
+
 initGrid(); renderCells();
 document.documentElement.style.setProperty('--col-width', `calc((100vw - 32px) / 4)`);
 document.documentElement.style.setProperty('--row-height', `calc(((100vw - 32px) / 4) * 0.4)`);
