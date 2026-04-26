@@ -1,3 +1,5 @@
+/* 【style.css の全内容】 */
+/* 下のコードをすべてコピーして GitHub の www/style.css に貼り付けてください */
 :root {
   --primary: #00e5ff;
   --bg: #121212;
@@ -45,6 +47,7 @@ h1 { font-size: 16px; margin: 0; color: var(--primary); font-weight: 600; letter
 .resize-handle-v {
   height: 8px; width: 100%; background: #333; cursor: ns-resize;
   border-top: 1px solid var(--primary); display: flex; justify-content: center; align-items: center;
+  touch-action: none;
 }
 .resize-handle-v::after {
   content: ""; width: 30px; height: 3px; background: rgba(255,255,255,0.2); border-radius: 2px;
