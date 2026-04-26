@@ -1,25 +1,70 @@
 /* 【www/style.css】 */
 :root {
-  --primary: #00e5ff; --bg: #121212; --cell-border: #333;
-  --col-width: 80px; --row-height: 40px; --col-header-width: 40px;
+    --primary: #00e5ff;
+    --bg: #121212;
+    --cell-bg: #1a1a1a;
+    --border: #333;
+    --header-bg: #222;
+    /* セルのサイズ（後でJSでも調整しますが初期値を設定） */
+    --col-width: 80px;
+    --row-height: 40px;
+    --header-size: 36px;
 }
-body { margin: 0; background: var(--bg); color: #fff; font-family: sans-serif; overflow: hidden; height: 100vh; }
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { margin: 0; font-family: sans-serif; background: var(--bg); color: #fff; height: 100vh; overflow: hidden; }
+
 #app { display: flex; flex-direction: column; height: 100%; }
-.top-bar-main { display: flex; justify-content: space-between; padding: 10px; background: #222; }
-.btn { background: #444; color: #fff; border: none; padding: 5px 10px; border-radius: 4px; }
-#grid-container { flex: 1; overflow: auto; }
+
+/* ヘッダー周り */
+header { background: var(--header-bg); border-bottom: 2px solid var(--border); box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+.top-bar-main { display: flex; justify-content: space-between; align-items: center; padding: 10px; }
+h1 { font-size: 16px; margin: 0; color: var(--primary); }
+.actions { display: flex; gap: 4px; }
+.btn { background: #333; color: #fff; border: 1px solid #444; padding: 6px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+.btn:active { background: var(--primary); color: #000; }
+
+/* 数式入力欄 */
+#info-bar { padding: 5px; background: #111; }
+#formula-bar { width: 100%; background: #000; border: 1px solid #444; color: #fff; font-size: 16px; padding: 8px; border-radius: 4px; outline: none; }
+
+/* 表の表示エリア */
+#grid-container { flex: 1; overflow: auto; position: relative; }
 #grid {
-  display: grid; 
-  grid-template-columns: var(--col-header-width) repeat(100, var(--col-width));
-  grid-auto-rows: var(--row-height);
+    display: grid;
+    grid-template-columns: var(--header-size) repeat(50, var(--col-width));
+    grid-auto-rows: var(--row-height);
+    width: max-content;
 }
+
+/* セル単体のデザイン */
 .cell {
-  background: #1a1a1a; border-right: 1px solid var(--cell-border); border-bottom: 1px solid var(--cell-border);
-  display: flex; align-items: center; justify-content: center; font-size: 14px; min-width: var(--col-width);
+    background: var(--cell-bg);
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    overflow: hidden;
+    white-space: nowrap;
 }
-.cell.header-row, .cell.header-col { background: #333; position: sticky; z-index: 5; }
-.cell.header-row { top: 0; } .cell.header-col { left: 0; }
-.cell.selected { border: 2px solid var(--primary); background: rgba(0,229,255,0.1); }
-.keyboard { position: fixed; bottom: 0; width: 100%; background: #222; z-index: 100; transition: transform 0.3s; }
+
+/* 行番号・列番号の固定見出し */
+.cell.header-row, .cell.header-col { background: #2a2a2a; color: #aaa; font-weight: bold; position: sticky; z-index: 5; }
+.cell.header-row { top: 0; }
+.cell.header-col { left: 0; }
+.cell.header-corner { top: 0; left: 0; z-index: 10; background: #333; }
+
+/* 選択中のセル */
+.cell.selected { border: 2px solid var(--primary); background: rgba(0, 229, 255, 0.1); z-index: 4; }
+
+/* 浮いているボタン */
+.floating-btn { position: fixed; bottom: 20px; right: 20px; background: var(--primary); border: none; padding: 12px 18px; border-radius: 30px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 100; }
+
+/* キーボード */
+.keyboard { position: fixed; bottom: 0; width: 100%; background: #1e1e1e; border-top: 2px solid var(--primary); z-index: 200; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 .keyboard.hidden { transform: translateY(100%); }
-.floating-btn { position: fixed; bottom: 20px; right: 20px; background: var(--primary); padding: 10px; border-radius: 20px; z-index: 50; }
+#kb-resize-handle { height: 10px; background: #333; cursor: ns-resize; touch-action: none; }
+.kb-keys { display: flex; gap: 10px; padding: 20px; justify-content: center; }
+.kb-key { background: #333; color: #fff; border: 1px solid #444; padding: 15px 25px; border-radius: 8px; font-weight: bold; }
