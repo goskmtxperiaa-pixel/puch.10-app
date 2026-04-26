@@ -1,17 +1,31 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>ぷちっと表計さん</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=10.0, user-scalable=yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#121212">
+  <title>ぷち表計算</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW registration failed:', err));
+      });
+    }
+  </script>
 </head>
+
 <body>
   <div id="app">
-    <header>
+    <header id="top-bar">
       <div class="top-bar-main">
-        <h1>ぷちっと表計さん</h1>
+        <h1>ぷち表計算</h1>
         <div class="actions">
           <button id="btn-open" class="btn">Open</button>
           <button id="btn-copy" class="btn">Copy</button>
@@ -21,56 +35,115 @@
         </div>
         <input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="display:none;">
       </div>
-      <div class="info-bar">
-        <div id="formula-hint" class="info-row formula-row"></div>
-        <div id="button-tooltip" class="info-row button-hint-row">説明</div>
+      <div id="info-bar" class="info-bar">
+        <div id="formula-hint" class="info-row formula-row">関数のヒント: ここに使い方が表示されます</div>
+        <div id="button-tooltip" class="info-row button-hint-row">ボタン説明: 触れるとここに意味が表示されます</div>
       </div>
     </header>
 
     <div id="grid-container">
-      <div id="grid"></div>
+      <div id="grid">
+        <!-- JSで生成 -->
+      </div>
     </div>
 
     <button id="btn-toggle-input" class="floating-btn">数値入力</button>
 
     <div id="custom-keyboard" class="keyboard hidden">
+      <!-- Height Resize Handle -->
       <div id="kb-resize-handle" class="resize-handle-v"></div>
+
       <div class="kb-formula-bar">
-        <input type="text" id="formula-bar" class="kb-formula-input" placeholder="数式入力..." readonly>
+        <input type="text" id="formula-bar" class="kb-formula-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="数式を入力...">
+        <button class="kb-key back" data-key="backspace" style="width:50px; height:36px; margin-left:5px;">Bk</button>
       </div>
-      <div id="kb-normal">
-        <div class="kb-grid-main">
-          <!-- テンキーエリア -->
-          <div class="kb-numpad">
-            <div class="kb-key num" data-key="7">7</div><div class="kb-key num" data-key="8">8</div><div class="kb-key num" data-key="9">9</div>
-            <div class="kb-key num" data-key="4">4</div><div class="kb-key num" data-key="5">5</div><div class="kb-key num" data-key="6">6</div>
-            <div class="kb-key num" data-key="1">1</div><div class="kb-key num" data-key="2">2</div><div class="kb-key num" data-key="3">3</div>
-            <div class="kb-key num" data-key="0" style="grid-column: span 2;">0</div><div class="kb-key num" data-key=".">.</div>
-          </div>
-          <!-- 中央操作エリア -->
-          <div class="kb-v-panel">
-            <div id="v-key-1" class="kb-key v-suggest"></div>
-            <div id="v-key-2" class="kb-key v-suggest"></div>
-            <div id="v-key-3" class="kb-key v-suggest"></div>
-            <div class="kb-key delete" data-key="backspace">⌫</div>
-          </div>
-          <!-- 関数エリア -->
-          <div class="kb-functions">
-            <div id="kb-primary-contents" class="kb-contents-grid">
-               <div class="kb-key" data-key="sum">SUM</div><div class="kb-key" data-key="avr">AVG</div><div class="kb-key" data-key="(">(</div><div class="kb-key" data-key=")">)</div><div class="kb-key" data-key="/">÷</div><div class="kb-key delete" data-key="delete-all">AC</div>
-               <div class="kb-key" data-key="arrow-up">↑</div><div class="kb-key" data-key="+">+</div><div class="kb-key" data-key="-">-</div><div class="kb-key" data-key="*">×</div><div class="kb-key fn-btn" data-key="toggle-fn">Fn</div><div class="kb-key" data-key="pi">π</div>
-               <div class="kb-key" data-key="arrow-left">←</div><div class="kb-key" data-key="arrow-down">↓</div><div class="kb-key" data-key="arrow-right">→</div><div class="kb-key" data-key=":">:</div><div class="kb-key" data-key="=">=</div><div class="kb-key enter" data-key="enter">確定</div>
-            </div>
-            <div id="kb-secondary-contents" class="kb-contents-grid hidden">
-               <div class="kb-key" data-key="max">MAX</div><div class="kb-key" data-key="min">MIN</div><div class="kb-key" data-key="count">CNT</div><div class="kb-key" data-key="sqrt">√</div><div class="kb-key" data-key="^">^</div><div class="kb-key" data-key="switch-hand">利き手</div>
-               <div class="kb-key" data-key="sin">sin</div><div class="kb-key" data-key="cos">cos</div><div class="kb-key" data-key="tan">tan</div><div class="kb-key" data-key="log">log</div><div class="kb-key fn-btn active" data-key="toggle-fn">Fn</div><div class="kb-key" data-key="minimize">隠す</div>
-               <div class="kb-key" data-key="abs">abs</div><div class="kb-key" data-key="exp">exp</div><div class="kb-key" data-key="round">RND</div><div class="kb-key" data-key=",">,</div><div class="kb-key" data-key="undo">↺</div><div class="kb-key enter" data-key="enter">確定</div>
-            </div>
-          </div>
+      
+      <div id="kb-handle" class="minimized-handle hidden"></div>
+
+      <div id="kb-normal" class="kb-grid-main">
+        <!-- テンキー (3列) -->
+        <div class="kb-numpad">
+          <button class="kb-key num" data-key="7">7</button>
+          <button class="kb-key num" data-key="8">8</button>
+          <button class="kb-key num" data-key="9">9</button>
+          <button class="kb-key num" data-key="4">4</button>
+          <button class="kb-key num" data-key="5">5</button>
+          <button class="kb-key num" data-key="6">6</button>
+          <button class="kb-key num" data-key="1">1</button>
+          <button class="kb-key num" data-key="2">2</button>
+          <button class="kb-key num" data-key="3">3</button>
+          <button class="kb-key num" data-key="0">0</button>
+          <button class="kb-key num" data-key="00">00</button>
+          <button class="kb-key num" data-key=".">.</button>
         </div>
+
+        <!-- 縦型予測パネル (1列) -->
+        <div class="kb-v-panel">
+          <button class="kb-key func v-static" data-key="switch-hand">◁▷</button>
+          <button class="kb-key v-suggest" id="v-key-1" data-key=""></button>
+          <button class="kb-key v-suggest" id="v-key-2" data-key=""></button>
+          <button class="kb-key v-suggest" id="v-key-3" data-key=""></button>
+        </div>
+
+        <!-- 機能キー (6列) -->
+        <div class="kb-functions">
+          <!-- Row 1 -->
+          <button class="kb-key delete" data-key="delete-all">Del</button>
+          <button class="kb-key back" data-key="backspace">Bk</button>
+          <button class="kb-key func fn-btn" data-key="toggle-fn">Fn</button>
+          <button class="kb-key func" data-key="minimize">▼</button>
+          <button class="kb-key op" data-key="(">(</button>
+          <button class="kb-key op" data-key=")">)</button>
+          
+          <!-- Fn OFF (Primary) -->
+          <div id="kb-primary-contents" class="kb-contents-grid">
+            <button class="kb-key func" data-key="sum">sum</button>
+            <button class="kb-key func" data-key="avr">avr</button>
+            <button class="kb-key op" data-key="+">+</button>
+            <button class="kb-key op" data-key="-">-</button>
+            <button class="kb-key op" data-key="*">*</button>
+            <button class="kb-key op" data-key="/">/</button>
+            <button class="kb-key func" data-key="sqrt">√</button>
+            <button class="kb-key func" data-key="pi">π</button>
+            <button class="kb-key op" data-key="^">^</button>
+            <button class="kb-key op" data-key="%">%</button>
+            <button class="kb-key func" data-key="round">rnd</button>
+            <button class="kb-key op" data-key=":">:</button>
+          </div>
+          
+          <!-- Fn ON (Secondary) -->
+          <div id="kb-secondary-contents" class="kb-contents-grid hidden">
+            <button class="kb-key func" data-key="sin">sin</button>
+            <button class="kb-key func" data-key="cos">cos</button>
+            <button class="kb-key func" data-key="tan">tan</button>
+            <button class="kb-key func" data-key="log">log</button>
+            <button class="kb-key func" data-key="abs">abs</button>
+            <button class="kb-key func" data-key="exp">exp</button>
+            <button class="kb-key func" data-key="max">max</button>
+            <button class="kb-key func" data-key="min">min</button>
+            <button class="kb-key func" data-key="count">cnt</button>
+            <button class="kb-key op" data-key=",">,</button>
+            <button class="kb-key op" data-key="=">=</button>
+            <button class="kb-key op" data-key="pi">π</button>
+          </div>
+
+          <!-- Final row (Always visible) -->
+          <button class="kb-key func" data-key="undo">↺</button>
+          <button class="kb-key func" data-key="arrow-left">←</button>
+          <button class="kb-key func" data-key="arrow-up">↑</button>
+          <button class="kb-key func" data-key="arrow-down">↓</button>
+          <button class="kb-key func" data-key="arrow-right">→</button>
+          <button class="kb-key enter" data-key="enter">Ent</button>
+        </div>
+      </div>
+
+      <div id="kb-minimized" class="kb-minimized hidden">
+        <button class="kb-key func" data-key="restore">▲ キーボードを表示</button>
       </div>
     </div>
   </div>
+
   <script src="script.js"></script>
 </body>
+
 </html>
